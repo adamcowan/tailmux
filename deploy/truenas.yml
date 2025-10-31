@@ -1,0 +1,23 @@
+# Tailmux deployment for TrueNAS SCALE
+# ------------------------------------
+# This Docker Compose snippet is designed for the "Install via YAML" flow.
+# It reuses the host's existing Tailscale connection by running in host
+# networking mode. After the app starts, publish it inside your tailnet with:
+#   tailscale serve tcp 3000 --name tailmux
+
+name: tailmux
+services:
+  app:
+    image: ghcr.io/<org>/tailmux:latest
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      PORT: "3000"
+      MAX_TERMINALS: "20"
+      WS_HEARTBEAT_INTERVAL: "30000"
+      TERMINAL_IDLE_TIMEOUT_MS: "0"
+      TZ: "UTC"
+    volumes:
+      - type: bind
+        source: /mnt/tank/apps/tailmux
+        target: /app/data

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tailmux</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Header -->
+  <div id="header">
+    <div id="header-left">
+      <h1>Tailmux</h1>
+      <button class="icon-btn" id="dashboard-btn" onclick="toggleDashboard()" title="Dashboard">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+      </button>
+    </div>
+    <div id="header-right">
+      <button class="icon-btn" id="new-tab-btn" onclick="showSessionSelector()" title="New Terminal">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+      </button>
+      <button class="icon-btn mobile-only" id="keyboard-btn" onclick="toggleVirtualKeyboard()" title="Keyboard">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+          <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"></path>
+        </svg>
+      </button>
+      <button class="icon-btn mobile-only" id="tmux-btn" onclick="toggleTmuxPanel()" title="tmux Controls">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+          <line x1="9" y1="3" x2="9" y2="21"></line>
+          <line x1="15" y1="9" x2="21" y2="9"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Tab Bar -->
+  <div id="tab-bar">
+    <div class="tab-actions">
+      <button class="tab-action-btn" id="tmux-new-window-btn" title="New tmux window (tmux tabs only)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="7" width="13" height="13" rx="2"></rect>
+          <path d="M17 3h4v4"></path>
+          <path d="M21 14v-7"></path>
+          <path d="M14 3h7"></path>
+          <line x1="9" y1="12" x2="9" y2="16"></line>
+          <line x1="7" y1="14" x2="11" y2="14"></line>
+        </svg>
+      </button>
+      <button class="tab-action-btn" id="tmux-rename-btn" title="Rename tmux session">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 20h9"></path>
+          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+        </svg>
+      </button>
+    </div>
+    <div id="tabs"></div>
+  </div>
+
+  <!-- Session Selector Modal -->
+  <div id="session-selector" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>New Terminal Session</h2>
+        <button class="icon-btn" onclick="hideSessionSelector()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div id="tmux-warning" class="tmux-warning hidden">
+        tmux is not installed. Install it to attach to existing sessions: <code>brew install tmux</code>
+      </div>
+
+      <div class="session-list" id="existing-sessions"></div>
+
+      <div class="session-option" onclick="showNewSessionForm('new')">
+        <h3>New Shell Session</h3>
+        <p>Start a fresh terminal (no session persistence)</p>
+      </div>
+
+      <div class="session-option" onclick="showNewSessionForm('tmux')">
+        <h3>New tmux Session</h3>
+        <p>Create a new persistent tmux session</p>
+      </div>
+
+      <div id="new-session-form" class="hidden">
+        <input type="text" id="session-name" placeholder="Session name (optional)">
+        <button class="btn" onclick="createSession()">Create Session</button>
+        <button class="btn btn-secondary" onclick="hideNewSessionForm()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dashboard Modal -->
+  <div id="dashboard" class="modal hidden">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h2>Session Dashboard</h2>
+        <button class="icon-btn" onclick="toggleDashboard()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="dashboard-stats">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-active">0</div>
+          <div class="stat-label">Active Sessions</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-tabs">0</div>
+          <div class="stat-label">Open Tabs</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-tmux">0</div>
+          <div class="stat-label">tmux Sessions</div>
+        </div>
+      </div>
+
+      <div class="dashboard-sessions">
+        <h3>Active Tabs</h3>
+        <div id="dashboard-tabs-list"></div>
+      </div>
+
+      <div class="dashboard-actions">
+        <button class="btn" onclick="showSessionSelector()">New Terminal</button>
+        <button class="btn btn-secondary" onclick="closeAllTabs()">Close All Tabs</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Virtual Keyboard (Mobile) -->
+  <div id="virtual-keyboard" class="hidden">
+    <div class="keyboard-row">
+      <button onclick="sendKey('Escape')">Esc</button>
+      <button onclick="sendKey('Tab')">Tab</button>
+      <button onclick="sendKey('Control', 'c')">^C</button>
+      <button onclick="sendKey('Control', 'd')">^D</button>
+      <button onclick="sendKey('Control', 'z')">^Z</button>
+    </div>
+    <div class="keyboard-row">
+      <button onclick="sendKey('ArrowUp')">↑</button>
+      <button onclick="sendKey('ArrowDown')">↓</button>
+      <button onclick="sendKey('ArrowLeft')">←</button>
+      <button onclick="sendKey('ArrowRight')">→</button>
+      <button onclick="sendKey('Enter')">↵</button>
+    </div>
+  </div>
+
+  <!-- tmux Control Panel (Mobile) -->
+  <div id="tmux-panel" class="hidden">
+    <div class="tmux-section">
+      <div class="tmux-section-title">Windows</div>
+      <div class="keyboard-row">
+        <button onclick="sendTmuxCommand(event, 'c')" title="New window">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          New
+        </button>
+        <button onclick="sendTmuxCommand(event, 'n')" title="Next window">Next</button>
+        <button onclick="sendTmuxCommand(event, 'p')" title="Previous window">Prev</button>
+        <button onclick="sendTmuxCommand(event, '&')" title="Kill window">Kill</button>
+        <button onclick="sendTmuxCommand(event, ',')" title="Rename window">Rename</button>
+      </div>
+    </div>
+
+    <div class="tmux-section">
+      <div class="tmux-section-title">Panes</div>
+      <div class="keyboard-row">
+        <button onclick="sendTmuxCommand(event, '%')" title="Split vertical">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="3" x2="12" y2="21"></line>
+          </svg>
+          Split V
+        </button>
+        <button onclick="sendTmuxCommand(event, '&quot;')" title="Split horizontal">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+          </svg>
+          Split H
+        </button>
+        <button onclick="sendTmuxCommand(event, 'o')" title="Next pane">Next</button>
+        <button onclick="sendTmuxCommand(event, 'x')" title="Kill pane">Kill</button>
+        <button onclick="sendTmuxCommand(event, 'z')" title="Toggle zoom">Zoom</button>
+      </div>
+    </div>
+
+    <div class="tmux-section">
+      <div class="tmux-section-title">Navigation</div>
+      <div class="keyboard-row">
+        <button onclick="sendTmuxCommand(event, 'ArrowUp')" title="Move to pane above">↑</button>
+        <button onclick="sendTmuxCommand(event, 'ArrowDown')" title="Move to pane below">↓</button>
+        <button onclick="sendTmuxCommand(event, 'ArrowLeft')" title="Move to pane left">←</button>
+        <button onclick="sendTmuxCommand(event, 'ArrowRight')" title="Move to pane right">→</button>
+      </div>
+    </div>
+
+    <div class="tmux-section">
+      <div class="tmux-section-title">Session</div>
+      <div class="keyboard-row">
+        <button onclick="sendTmuxCommand(event, '$')" title="Rename session">Rename</button>
+        <button onclick="sendTmuxCommand(event, 's')" title="List sessions">List</button>
+      </div>
+    </div>
+
+    <div class="tmux-section">
+      <div class="tmux-section-title">Quick Actions</div>
+      <div class="keyboard-row">
+        <button onclick="sendTmuxCommand(event, '[')" title="Copy mode">Copy</button>
+        <button onclick="sendTmuxCommand(event, 't')" title="Show time">Time</button>
+        <button onclick="sendTmuxCommand(event, '?')" title="Show help">Help</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Terminal Container -->
+  <div id="terminal-container">
+    <!-- Terminals will be created dynamically -->
+  </div>
+
+  <!-- Toast Notifications -->
+  <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

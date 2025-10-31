@@ -1,0 +1,19 @@
+{
+  "name": "tailmux",
+  "version": "1.0.0",
+  "description": "Tailmux remote terminal access via browser",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0",
+    "node-pty": "^1.0.0",
+    "express": "^4.21.1"
+  },
+  "devDependencies": {},
+  "keywords": ["terminal", "remote", "websocket", "pty"],
+  "author": "",
+  "license": "MIT"
+}

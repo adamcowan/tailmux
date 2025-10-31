@@ -1,0 +1,877 @@
+/* Base Styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #000;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+  overflow: hidden;
+  color: #fff;
+}
+
+/* Header */
+#header {
+  background: #1e1e1e;
+  color: #fff;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #333;
+  height: 50px;
+}
+
+#header-left, #header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#header h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  color: #aaa;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.icon-btn:hover {
+  background: #333;
+  color: #fff;
+}
+
+.icon-btn:active {
+  transform: scale(0.95);
+}
+
+/* Tab Bar */
+#tab-bar {
+  display: flex;
+  align-items: center;
+  background: #252525;
+  border-bottom: 1px solid #333;
+  height: 40px;
+}
+
+.tab-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  border-right: 1px solid #333;
+  flex: 0 0 auto;
+}
+
+.tab-action-btn {
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
+  color: #bbb;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab-action-btn:hover {
+  color: #fff;
+  border-color: #4a9eff;
+  background: #333;
+}
+
+.tab-action-btn:active {
+  transform: scale(0.95);
+}
+
+.tab-action-btn:disabled,
+.tab-action-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: #2d2d2d;
+  background: #1f1f1f;
+  color: #666;
+}
+
+.tab-action-btn svg {
+  pointer-events: none;
+}
+
+#tabs {
+  flex: 1;
+  display: flex;
+  gap: 2px;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  padding-right: 8px;
+}
+
+#tabs::-webkit-scrollbar {
+  height: 4px;
+}
+
+#tabs::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 2px;
+}
+
+.tab {
+  background: #2a2a2a;
+  border: none;
+  color: #aaa;
+  padding: 8px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 120px;
+  max-width: 200px;
+  border-top: 2px solid transparent;
+  transition: all 0.2s;
+  font-size: 13px;
+}
+
+.tab:hover {
+  background: #333;
+  color: #fff;
+}
+
+.tab.active {
+  background: #000;
+  color: #4a9eff;
+  border-top-color: #4a9eff;
+}
+
+.tab-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab-close {
+  opacity: 0.6;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.tab-close:hover {
+  opacity: 1;
+  color: #ff5555;
+}
+
+.tab-status {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #44ff44;
+}
+
+.tab-status.disconnected {
+  background: #ff4444;
+}
+
+/* Terminal Container */
+#terminal-container {
+  height: calc(100vh - 92px);
+  position: relative;
+}
+
+.terminal-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  display: none;
+}
+
+.terminal-wrapper.active {
+  display: block;
+}
+
+.terminal {
+  height: 100%;
+  width: 100%;
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: #1a1a1a;
+  border-radius: 8px;
+  border: 1px solid #333;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.modal-content.modal-large {
+  max-width: 900px;
+}
+
+.modal-header {
+  padding: 20px;
+  border-bottom: 1px solid #333;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background: #1a1a1a;
+  z-index: 1;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+/* Session Options */
+.session-list {
+  padding: 20px;
+}
+
+.session-option {
+  background: #2a2a2a;
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.session-option:hover {
+  background: #333;
+  border-color: #4a9eff;
+}
+
+.session-option h3 {
+  margin: 0 0 5px 0;
+  color: #4a9eff;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.session-option p {
+  margin: 5px 0 0 0;
+  color: #999;
+  font-size: 13px;
+}
+
+/* Forms */
+input[type="text"] {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  color: #fff;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+input[type="text"]:focus {
+  outline: none;
+  border-color: #4a9eff;
+}
+
+.btn {
+  background: #4a9eff;
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: 600;
+  margin: 5px;
+  transition: all 0.2s;
+}
+
+.btn:hover {
+  background: #3a8eef;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-secondary {
+  background: #444;
+}
+
+.btn-secondary:hover {
+  background: #555;
+}
+
+/* Dashboard */
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  padding: 20px;
+}
+
+.stat-card {
+  background: #2a2a2a;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  border: 2px solid #333;
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #4a9eff;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dashboard-sessions {
+  padding: 20px;
+  border-top: 1px solid #333;
+}
+
+.dashboard-sessions h3 {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.dashboard-tab-item {
+  background: #2a2a2a;
+  padding: 12px 15px;
+  margin: 8px 0;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #333;
+}
+
+.dashboard-tab-info {
+  flex: 1;
+}
+
+.dashboard-tab-name {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.dashboard-tab-details {
+  font-size: 12px;
+  color: #999;
+}
+
+.dashboard-tab-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.dashboard-actions {
+  padding: 20px;
+  border-top: 1px solid #333;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+/* Warnings */
+.tmux-warning {
+  background: #3a3a00;
+  border: 1px solid #666600;
+  padding: 15px;
+  border-radius: 4px;
+  margin: 20px;
+  color: #ffff99;
+  font-size: 13px;
+}
+
+.tmux-warning code {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+}
+
+/* Virtual Keyboard (Mobile) */
+#virtual-keyboard {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #1e1e1e;
+  border-top: 2px solid #333;
+  padding: 10px;
+  z-index: 100;
+}
+
+.keyboard-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  justify-content: center;
+}
+
+.keyboard-row:last-child {
+  margin-bottom: 0;
+}
+
+.keyboard-row button {
+  flex: 1;
+  max-width: 80px;
+  padding: 12px;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  color: #fff;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.keyboard-row button:active {
+  background: #4a9eff;
+  border-color: #4a9eff;
+}
+
+/* tmux Control Panel (Mobile) */
+#tmux-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #1a1a1a;
+  border-top: 2px solid #4a9eff;
+  padding: 15px;
+  z-index: 100;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.tmux-section {
+  margin-bottom: 15px;
+}
+
+.tmux-section:last-child {
+  margin-bottom: 0;
+}
+
+.tmux-section-title {
+  color: #4a9eff;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  padding-left: 4px;
+}
+
+#tmux-panel .keyboard-row {
+  flex-wrap: wrap;
+}
+
+#tmux-panel .keyboard-row button {
+  flex: 0 0 auto;
+  min-width: 60px;
+  max-width: none;
+  padding: 10px 12px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+}
+
+#tmux-panel .keyboard-row button:active {
+  background: #4a9eff;
+  border-color: #4a9eff;
+}
+
+#tmux-panel .keyboard-row button svg {
+  flex-shrink: 0;
+}
+
+/* Scroll Controls */
+.scroll-controls {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10;
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+
+.scroll-controls:hover {
+  opacity: 1;
+}
+
+.scroll-btn {
+  background: rgba(42, 42, 42, 0.9);
+  border: 1px solid #444;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #fff;
+  transition: all 0.2s;
+  backdrop-filter: blur(4px);
+  padding: 0;
+  touch-action: manipulation;
+}
+
+.scroll-btn:active {
+  background: #4a9eff;
+  border-color: #4a9eff;
+  transform: scale(0.9);
+}
+
+.scroll-btn svg {
+  pointer-events: none;
+}
+
+.tmux-soft-keys {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10;
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+
+.tmux-soft-keys:hover {
+  opacity: 1;
+}
+
+.tmux-soft-key {
+  background: rgba(42, 42, 42, 0.9);
+  border: 1px solid #444;
+  border-radius: 12px;
+  width: 44px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #fff;
+  transition: all 0.2s;
+  backdrop-filter: blur(4px);
+  padding: 0;
+  touch-action: manipulation;
+}
+
+.tmux-soft-key:active {
+  background: #4a9eff;
+  border-color: #4a9eff;
+  transform: scale(0.9);
+}
+
+.tmux-soft-key svg {
+  pointer-events: none;
+}
+
+/* Hide scroll controls when keyboard/tmux panel is open */
+#terminal-container.keyboard-visible .scroll-controls,
+#terminal-container.tmux-visible .scroll-controls,
+#terminal-container.keyboard-visible .tmux-soft-keys,
+#terminal-container.tmux-visible .tmux-soft-keys {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* Scroll Position Indicator */
+.scroll-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.scroll-indicator.active {
+  opacity: 1;
+}
+
+.scroll-indicator-track {
+  width: 4px;
+  height: 100px;
+  background: rgba(68, 68, 68, 0.3);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.scroll-indicator-bar {
+  width: 100%;
+  background: #4a9eff;
+  border-radius: 2px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: height 0.2s ease-out, transform 0.2s ease-out;
+  min-height: 12px;
+  box-shadow: 0 0 4px rgba(74, 158, 255, 0.4);
+}
+
+.scroll-indicator-label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #888;
+  transition: color 0.2s;
+}
+
+.scroll-indicator.history .scroll-indicator-label {
+  color: #4a9eff;
+}
+
+.terminal-wrapper.tmux-copy-mode .scroll-btn[data-action="bottom"] {
+  background: rgba(74, 158, 255, 0.18);
+  border-color: #4a9eff;
+  color: #4a9eff;
+}
+
+/* Toast Notifications */
+#toast-container {
+  position: fixed;
+  top: 70px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 1500;
+  pointer-events: none;
+}
+
+.toast {
+  min-width: 240px;
+  max-width: 360px;
+  background: rgba(26, 26, 26, 0.95);
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #f5f5f5;
+  padding: 12px 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: auto;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.toast.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast.hiding {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.toast.toast-info {
+  border-color: rgba(74, 158, 255, 0.7);
+}
+
+.toast.toast-success {
+  border-color: rgba(46, 204, 113, 0.7);
+}
+
+.toast.toast-warning {
+  border-color: rgba(241, 196, 15, 0.7);
+  color: #f8e8b0;
+}
+
+.toast.toast-error {
+  border-color: rgba(255, 85, 85, 0.9);
+  background: rgba(60, 18, 18, 0.95);
+}
+
+@media (max-width: 600px) {
+  #toast-container {
+    top: auto;
+    bottom: 20px;
+    right: 50%;
+    left: 50%;
+    transform: translateX(-50%);
+    align-items: center;
+  }
+
+  .toast {
+    width: min(90vw, 360px);
+  }
+}
+
+/* Mobile Specific */
+.mobile-only {
+  display: none;
+}
+
+/* Show scroll controls on narrow screens or mobile */
+@media (max-width: 768px) {
+  .mobile-only {
+    display: flex;
+  }
+}
+
+/* Also show on desktop for testing - remove this later */
+.scroll-controls {
+  display: flex !important;
+}
+
+.tmux-soft-keys {
+  display: flex !important;
+}
+
+@media (max-width: 768px) {
+  .mobile-only {
+    display: flex;
+  }
+
+  #header {
+    padding: 8px 12px;
+    height: 45px;
+  }
+
+  #header h1 {
+    font-size: 16px;
+  }
+
+  #tab-bar {
+    height: 35px;
+  }
+
+  .tab {
+    min-width: 100px;
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  #terminal-container {
+    height: calc(100vh - 82px);
+  }
+
+  #terminal-container.keyboard-visible {
+    height: calc(100vh - 200px);
+  }
+
+  #terminal-container.tmux-visible {
+    height: calc(100vh - 320px);
+  }
+
+  .terminal-wrapper {
+    padding: 10px;
+  }
+
+  .modal-content {
+    width: 95%;
+    max-height: 90vh;
+  }
+
+  .modal-header {
+    padding: 15px;
+  }
+
+  .modal-header h2 {
+    font-size: 18px;
+  }
+
+  .session-list {
+    padding: 15px;
+  }
+
+  .dashboard-stats {
+    grid-template-columns: 1fr;
+    padding: 15px;
+  }
+
+  .stat-card {
+    padding: 15px;
+  }
+
+  .dashboard-actions {
+    flex-direction: column;
+  }
+
+  .dashboard-actions .btn {
+    width: 100%;
+  }
+}
+
+/* Utilities */
+.hidden {
+  display: none !important;
+}
+
+#new-session-form {
+  padding: 0 20px 20px 20px;
+}
