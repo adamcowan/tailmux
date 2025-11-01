@@ -5,19 +5,24 @@
 # networking mode. After the app starts, publish it inside your tailnet with:
 #   tailscale serve tcp 3000 --name tailmux
 
-name: tailmux
 services:
   app:
-    image: ghcr.io/<org>/tailmux:latest
-    restart: unless-stopped
-    network_mode: host
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8192M
     environment:
-      PORT: "3000"
-      MAX_TERMINALS: "20"
-      WS_HEARTBEAT_INTERVAL: "30000"
-      TERMINAL_IDLE_TIMEOUT_MS: "0"
-      TZ: "UTC"
+      PORT: '3000'
+      TZ: America/Los_Angeles
+    image: ghcr.io/adamcowan/tailmux:latest
+    network_mode: host
+    platform: linux/amd64
+    privileged: False
+    restart: unless-stopped
+    stdin_open: False
+    tty: False
     volumes:
-      - type: bind
-        source: /mnt/tank/apps/tailmux
+      - source: /mnt/POOL/apps/tailmux  # <-- change to your dataset path
         target: /app/data
+        type: bind

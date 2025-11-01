@@ -28,13 +28,14 @@ Environment variables:
 | `MAX_TERMINALS` | `10` | Maximum concurrent terminals |
 | `WS_HEARTBEAT_INTERVAL` | `30000` | WebSocket ping interval (ms) |
 | `TERMINAL_IDLE_TIMEOUT_MS` | `0` | Idle timeout before closing terminals |
+| `tmux` | bundled | Alpine tmux package is installed at build time |
 
 ## TrueNAS Deployment
 
 If your TrueNAS host already runs Tailscale, use the compose file in `deploy/truenas.yml`:
 
 1. Open **Apps → Custom App → Install via YAML**.
-2. Paste the contents of `deploy/truenas.yml`.
+2. Paste the contents of `deploy/truenas.yml` and replace `/mnt/POOL/apps/tailmux` with the dataset path you want to bind inside the container.
 3. After the container starts, publish Tailmux inside your tailnet:
    ```bash
    tailscale serve tcp 3000 --name tailmux
@@ -42,6 +43,87 @@ If your TrueNAS host already runs Tailscale, use the compose file in `deploy/tru
 4. Tailnet users can now reach Tailmux using the MagicDNS name you chose.
 
 For hosts without Tailscale, run a sidecar container or adapt the compose file accordingly.
+
+## Tailscale & Private Network Usage
+
+Tailmux is designed for private networks. Keep the HTTP endpoint off the public internet and put it behind a trusted overlay such as Tailscale. Tailmux does **not** ship with built‑in authentication—anyone who can reach port 3000 can run shell commands under the container’s user.
+
+### Recommended pattern
+
+1. Create a Tailscale tailnet and install the Tailscale client on the machines that need access to Tailmux.
+2. Run Tailmux on a host that also runs the Tailscale node (Docker, TrueNAS, bare metal, etc.).
+3. Advertise the service to the tailnet:
+
+   ```bash
+   tailscale serve tcp 3000 --name tailmux
+   ```
+
+   Tailnet members with the correct ACLs can now use the MagicDNS name assigned to `tailmux`.
+4. (Optional) If you move Tailmux between hosts, reuse the same service name so clients keep a stable URL.
+
+### Security considerations
+
+- **Never expose Tailmux directly to the public internet.** Without extra front-ends (reverse proxies with auth, OAuth, etc.), anyone who can reach the service gets a shell.
+- For bare-metal deployments, create a dedicated system user with minimal privileges; avoid running the server as root.
+- Enforce Tailscale ACLs to limit who can reach the service. Tailmux happily spawns shells for every connected browser tab.
+- If you add HTTP auth in front (e.g., nginx, Caddy, OAuth2 Proxy), ensure idle timeout and audit logging match your organization’s expectations.
+- Rotate your Tailscale auth keys and GitHub container registry PATs regularly.
+
+Running Tailmux inside a private overlay network (Tailscale, ZeroTier, VPN) is the easiest way to keep the attack surface small while still supporting remote tmux access.
+
+## Running Tailmux as a systemd Service (bare metal)
+
+When you deploy Tailmux directly on Linux, run it under a dedicated user and supervise it with systemd so it restarts automatically on boot.
+
+1. **Create a runtime user and install dependencies**
+
+   ```bash
+   sudo useradd --system --home /opt/tailmux --shell /usr/sbin/nologin tailmux
+   sudo mkdir -p /opt/tailmux
+   sudo chown tailmux:tailmux /opt/tailmux
+   sudo apt install -y nodejs npm tmux   # substitute your distro's package manager
+   ```
+
+2. **Deploy the application**
+
+   ```bash
+   sudo -u tailmux git clone https://github.com/adamcowan/tailmux.git /opt/tailmux
+   cd /opt/tailmux
+   sudo -u tailmux npm install --omit=dev
+   ```
+
+3. **Create `/etc/systemd/system/tailmux.service`**
+
+   ```ini
+   [Unit]
+   Description=Tailmux remote terminal gateway
+   After=network.target
+
+   [Service]
+   User=tailmux
+   Group=tailmux
+   WorkingDirectory=/opt/tailmux
+   Environment=PORT=3000
+   Environment=MAX_TERMINALS=20
+   Environment=WS_HEARTBEAT_INTERVAL=30000
+   Environment=TERMINAL_IDLE_TIMEOUT_MS=0
+   ExecStart=/usr/bin/node /opt/tailmux/server.js
+   Restart=on-failure
+   RestartSec=3
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+4. **Enable and start the service**
+
+   ```bash
+   sudo systemctl daemon-reload
+   sudo systemctl enable --now tailmux.service
+   sudo systemctl status tailmux.service
+   ```
+
+Pair this with a Tailscale client running on the same host and publish the service (`tailscale serve tcp 3000 --name tailmux`). Always restrict access at the network layer because Tailmux itself has no built-in authentication.
 
 ## Features
 
@@ -78,13 +160,15 @@ For hosts without Tailscale, run a sidecar container or adapt the compose file a
 npm install
 ```
 
-### Optional: Install tmux for session persistence
+### Install tmux on bare-metal hosts
 
-To attach to existing terminal sessions or create persistent sessions:
+Tailmux can create and attach to tmux sessions. If you run the Node server directly on macOS/Linux, install tmux locally:
 
 ```bash
-brew install tmux
+brew install tmux   # or apt/yum equivalent
 ```
+
+The Docker image already bundles the Alpine `tmux` package (verified during build), so no extra steps are needed in container deployments.
 
 ## Usage
 
