@@ -18,7 +18,6 @@ Visit `http://localhost:3000` to open Tailmux.
 - **tmux integration** - Create or attach to persistent tmux sessions
 - **Session dashboard** - Manage all tabs from one interface
 - **Mobile optimized** - Virtual keyboard and tmux control panel
-- **Advanced scrolling** - Five different methods including two-finger touch
 
 See [FEATURES.md](FEATURES.md) and [MOBILE_FEATURES.md](MOBILE_FEATURES.md) for detailed feature documentation.
 
