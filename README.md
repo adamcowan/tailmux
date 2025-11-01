@@ -19,8 +19,6 @@ Visit `http://localhost:3000` to open Tailmux.
 - **Session dashboard** - Manage all tabs from one interface
 - **Mobile optimized** - Virtual keyboard and tmux control panel
 
-See [FEATURES.md](FEATURES.md) and [MOBILE_FEATURES.md](MOBILE_FEATURES.md) for detailed feature documentation.
-
 ## Deployment
 
 ### Docker
@@ -103,8 +101,6 @@ Open `http://localhost:3000` in your browser. You'll see options to:
 - **Dashboard**: Grid icon shows all sessions and statistics
 - **Mobile**: Keyboard icon for virtual keys, tmux icon for command panel
 - **Scrolling**: Two-finger swipe, scroll buttons, or tmux copy mode
-
-See [MOBILE_FEATURES.md](MOBILE_FEATURES.md) for detailed mobile usage and [SCROLLING_GUIDE.md](SCROLLING_GUIDE.md) for scrolling methods.
 
 ## systemd Service Configuration
 
