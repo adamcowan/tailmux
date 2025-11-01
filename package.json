@@ -7,13 +7,24 @@
     "start": "node server.js",
     "dev": "node server.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/adamcowan/tailmux.git"
+  },
+  "bugs": {
+    "url": "https://github.com/adamcowan/tailmux/issues"
+  },
+  "homepage": "https://github.com/adamcowan/tailmux#readme",
   "dependencies": {
     "ws": "^8.18.0",
     "node-pty": "^1.0.0",
     "express": "^4.21.1"
   },
   "devDependencies": {},
-  "keywords": ["terminal", "remote", "websocket", "pty"],
-  "author": "",
-  "license": "MIT"
+  "keywords": ["terminal", "remote", "websocket", "pty", "tmux", "xterm", "browser-terminal"],
+  "author": "Adam Cowan",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  }
 }
