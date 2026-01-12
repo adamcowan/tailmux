@@ -24,6 +24,49 @@ const HEARTBEAT_INTERVAL = Number.isNaN(parsedHeartbeat) ? 30000 : parsedHeartbe
 const parsedIdleTimeout = Number.parseInt(process.env.TERMINAL_IDLE_TIMEOUT_MS || '0', 10);
 const TERMINAL_IDLE_TIMEOUT_MS = Number.isNaN(parsedIdleTimeout) ? 0 : parsedIdleTimeout;
 
+const TAILMUX_TOKEN = process.env.TAILMUX_TOKEN || '';
+const HOST = process.env.HOST || '127.0.0.1';
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+function isOriginAllowed(origin, host) {
+  if (!origin) {
+    return true;
+  }
+
+  if (ALLOWED_ORIGINS.length > 0) {
+    return ALLOWED_ORIGINS.includes(origin);
+  }
+
+  try {
+    const parsed = new URL(origin);
+    return parsed.host === host;
+  } catch (err) {
+    return false;
+  }
+}
+
+function isTokenValid(token) {
+  if (!TAILMUX_TOKEN) {
+    return true;
+  }
+  return token === TAILMUX_TOKEN;
+}
+
+function getTokenFromRequest(req) {
+  const authHeader = req.headers.authorization || '';
+  if (authHeader.toLowerCase().startsWith('bearer ')) {
+    return authHeader.slice(7).trim();
+  }
+  const directToken = req.headers['x-tailmux-token'];
+  if (typeof directToken === 'string') {
+    return directToken.trim();
+  }
+  return '';
+}
+
 // Check if tmux is available
 function isTmuxAvailable() {
   try {
@@ -132,6 +175,9 @@ function scheduleIdleTimeout(terminalId) {
 
 // API endpoint to list sessions
 app.get('/api/sessions', (req, res) => {
+  if (!isTokenValid(getTokenFromRequest(req))) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
   if (!isTmuxAvailable()) {
     return res.json({
       tmuxAvailable: false,
@@ -147,6 +193,9 @@ app.get('/api/sessions', (req, res) => {
 });
 
 app.post('/api/tmux/rename', (req, res) => {
+  if (!isTokenValid(getTokenFromRequest(req))) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
   if (!isTmuxAvailable()) {
     return res.status(400).json({ error: 'tmux is not installed on the server.' });
   }
@@ -201,7 +250,15 @@ if (HEARTBEAT_INTERVAL > 0) {
   wss.on('close', () => clearInterval(heartbeatInterval));
 }
 
-wss.on('connection', (ws) => {
+wss.on('connection', (ws, req) => {
+  const host = req.headers['x-forwarded-host'] || req.headers.host || '';
+  const origin = req.headers.origin;
+  if (!isOriginAllowed(origin, host)) {
+    console.warn(`Rejected websocket origin: ${origin || 'unknown'} (host ${host})`);
+    ws.close(1008, 'Origin not allowed');
+    return;
+  }
+
   console.log('Client connected');
   ws.isAlive = true;
   ws.on('pong', () => {
@@ -212,11 +269,29 @@ wss.on('connection', (ws) => {
   let terminalId = null;
   let sessionMode = null; // 'new' or 'attach'
   let sessionName = null;
+  const requiresToken = Boolean(TAILMUX_TOKEN);
+  let isAuthorized = !requiresToken;
 
   // Handle messages from browser
   ws.on('message', (message) => {
     try {
       const msg = JSON.parse(message);
+
+      if (!isAuthorized) {
+        if (msg.type !== 'create') {
+          sendError(ws, 'Authentication required.');
+          ws.close(1008, 'Authentication required');
+          return;
+        }
+
+        if (msg.token !== TAILMUX_TOKEN) {
+          sendError(ws, 'Invalid authentication token.');
+          ws.close(1008, 'Invalid authentication token');
+          return;
+        }
+
+        isAuthorized = true;
+      }
 
       if (msg.type === 'create' && !term) {
         // Create new session or attach to existing
@@ -389,6 +464,6 @@ wss.on('connection', (ws) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+server.listen(PORT, HOST, () => {
+  console.log(`Server running on http://${HOST}:${PORT}`);
 });

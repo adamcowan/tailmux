@@ -75,6 +75,15 @@ function handleWindowResize() {
 
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 const wsUrl = `${protocol}//${window.location.host}`;
+const TOKEN_STORAGE_KEY = 'tailmux_token';
+const urlToken = new URLSearchParams(window.location.search).get('token');
+if (urlToken) {
+  localStorage.setItem(TOKEN_STORAGE_KEY, urlToken);
+  const cleanedUrl = new URL(window.location.href);
+  cleanedUrl.searchParams.delete('token');
+  window.history.replaceState({}, document.title, cleanedUrl.toString());
+}
+const authToken = urlToken || localStorage.getItem(TOKEN_STORAGE_KEY) || '';
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -102,7 +111,8 @@ async function fetchSessions(force = false) {
     return sessionFetchPromise;
   }
 
-  const request = fetch('/api/sessions')
+  const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {};
+  const request = fetch('/api/sessions', { headers })
     .then(async (response) => {
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
@@ -205,9 +215,11 @@ function setupTmuxFastActions() {
       renameBtn.disabled = true;
 
       try {
+        const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {};
         const response = await fetch('/api/tmux/rename', {
           method: 'POST',
           headers: {
+            ...headers,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({ currentName: tab.sessionName, newName })
@@ -436,11 +448,16 @@ function createTab(sessionLabel, mode, requestedSessionName = sessionLabel) {
   const tabButton = document.createElement('div');
   tabButton.className = 'tab';
   tabButton.id = tabId;
-  tabButton.innerHTML = `
-    <div class="tab-status"></div>
-    <div class="tab-label">${displayName}</div>
-    <div class="tab-close" onclick="closeTab('${tabId}', event)">×</div>
-  `;
+  const statusEl = document.createElement('div');
+  statusEl.className = 'tab-status';
+  const labelEl = document.createElement('div');
+  labelEl.className = 'tab-label';
+  labelEl.textContent = displayName;
+  const closeEl = document.createElement('div');
+  closeEl.className = 'tab-close';
+  closeEl.textContent = '×';
+  closeEl.addEventListener('click', (event) => closeTab(tabId, event));
+  tabButton.append(statusEl, labelEl, closeEl);
   tabButton.onclick = (e) => {
     if (!e.target.classList.contains('tab-close')) {
       switchTab(tabId);
@@ -608,7 +625,8 @@ function connectTerminal(tabId) {
       mode: tab.mode,
       sessionName: tab.sessionName || '',
       cols: tab.term.cols,
-      rows: tab.term.rows
+      rows: tab.term.rows,
+      token: authToken
     }));
 
     if (wasReconnecting) {
@@ -758,24 +776,30 @@ async function loadSessions() {
       document.getElementById('tmux-warning').classList.add('hidden');
     }
 
+    existingSessionsDiv.replaceChildren();
     if (data.sessions && data.sessions.length > 0) {
-      const sessionsHtml = data.sessions.map(session => `
-        <div class="session-option" onclick="attachToSession('${session.name}')">
-          <h3>Attach to: ${session.name}</h3>
-          <p>
-            ${session.windows} window(s) |
-            ${session.attached ? 'Currently attached' : 'Detached'} |
-            Created: ${new Date(session.created).toLocaleString()}
-          </p>
-        </div>
-      `).join('');
+      const heading = document.createElement('h3');
+      heading.style.color = '#fff';
+      heading.style.fontSize = '16px';
+      heading.style.marginBottom = '10px';
+      heading.textContent = 'Existing tmux Sessions';
+      existingSessionsDiv.appendChild(heading);
 
-      existingSessionsDiv.innerHTML = `
-        <h3 style="color: #fff; font-size: 16px; margin-bottom: 10px;">Existing tmux Sessions</h3>
-        ${sessionsHtml}
-      `;
+      data.sessions.forEach((session) => {
+        const option = document.createElement('div');
+        option.className = 'session-option';
+        option.addEventListener('click', () => attachToSession(session.name));
+
+        const title = document.createElement('h3');
+        title.textContent = `Attach to: ${session.name}`;
+        const details = document.createElement('p');
+        details.textContent = `${session.windows} window(s) | ${session.attached ? 'Currently attached' : 'Detached'} | Created: ${new Date(session.created).toLocaleString()}`;
+
+        option.append(title, details);
+        existingSessionsDiv.appendChild(option);
+      });
     } else {
-      existingSessionsDiv.innerHTML = '';
+      existingSessionsDiv.replaceChildren();
     }
   } catch (err) {
     console.error('Failed to load sessions:', err);
@@ -847,32 +871,63 @@ async function updateDashboard() {
 
   // Update tabs list
   const tabsList = document.getElementById('dashboard-tabs-list');
+  tabsList.replaceChildren();
   if (tabs.size === 0) {
-    tabsList.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">No active tabs</p>';
+    const empty = document.createElement('p');
+    empty.style.color = '#999';
+    empty.style.textAlign = 'center';
+    empty.style.padding = '20px';
+    empty.textContent = 'No active tabs';
+    tabsList.appendChild(empty);
   } else {
-    tabsList.innerHTML = Array.from(tabs.entries()).map(([tabId, tab]) => `
-      <div class="dashboard-tab-item">
-        <div class="dashboard-tab-info">
-          <div class="dashboard-tab-name">${tab.sessionLabel}</div>
-          <div class="dashboard-tab-details">
-            ${tab.mode} | ${tab.connected ? 'Connected' : 'Disconnected'}
-          </div>
-        </div>
-        <div class="dashboard-tab-actions">
-          <button class="icon-btn" onclick="switchTab('${tabId}'); toggleDashboard();" title="Switch">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
-          </button>
-          <button class="icon-btn" onclick="closeTab('${tabId}')" title="Close">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </div>
-      </div>
-    `).join('');
+    Array.from(tabs.entries()).forEach(([tabId, tab]) => {
+      const item = document.createElement('div');
+      item.className = 'dashboard-tab-item';
+
+      const info = document.createElement('div');
+      info.className = 'dashboard-tab-info';
+
+      const name = document.createElement('div');
+      name.className = 'dashboard-tab-name';
+      name.textContent = tab.sessionLabel;
+
+      const details = document.createElement('div');
+      details.className = 'dashboard-tab-details';
+      details.textContent = `${tab.mode} | ${tab.connected ? 'Connected' : 'Disconnected'}`;
+
+      info.append(name, details);
+
+      const actions = document.createElement('div');
+      actions.className = 'dashboard-tab-actions';
+
+      const switchBtn = document.createElement('button');
+      switchBtn.className = 'icon-btn';
+      switchBtn.title = 'Switch';
+      switchBtn.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      `;
+      switchBtn.addEventListener('click', () => {
+        switchTab(tabId);
+        toggleDashboard();
+      });
+
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'icon-btn';
+      closeBtn.title = 'Close';
+      closeBtn.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      `;
+      closeBtn.addEventListener('click', () => closeTab(tabId));
+
+      actions.append(switchBtn, closeBtn);
+      item.append(info, actions);
+      tabsList.appendChild(item);
+    });
   }
 }
 
