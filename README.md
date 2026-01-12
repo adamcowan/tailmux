@@ -54,14 +54,15 @@ See the systemd service configuration in the [deployment section below](#systemd
 
 ## Security
 
-**⚠️ Important:** Tailmux has **no built-in authentication**. Anyone who can reach port 3000 can access a shell.
+**⚠️ Important:** Tailmux does **not** require authentication unless you set `TAILMUX_TOKEN`. Without it, anyone who can reach port 3000 can access a shell.
 
 ### Recommended Setup
 
 1. **Use Tailscale or VPN** - Never expose directly to the internet
 2. **Run as dedicated user** - Create a limited-privilege user for the service
 3. **Enable Tailscale ACLs** - Restrict which tailnet users can access the service
-4. **Add reverse proxy auth** - Use nginx/Caddy with OAuth if needed
+4. **Set `TAILMUX_TOKEN`** - Require a shared token for WebSocket + API access
+5. **Add reverse proxy auth** - Use nginx/Caddy with OAuth if needed
 
 ### Tailscale Integration
 
