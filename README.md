@@ -33,9 +33,12 @@ Environment variables:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PORT` | `3000` | HTTP port |
+| `HOST` | `127.0.0.1` | Bind address |
 | `MAX_TERMINALS` | `10` | Maximum concurrent terminals |
 | `WS_HEARTBEAT_INTERVAL` | `30000` | WebSocket ping interval (ms) |
 | `TERMINAL_IDLE_TIMEOUT_MS` | `0` | Idle timeout (0 = disabled) |
+| `ALLOWED_ORIGINS` | _(empty)_ | Comma-separated list of allowed WebSocket origins |
+| `TAILMUX_TOKEN` | _(empty)_ | Shared token required for WebSocket access |
 
 ### TrueNAS SCALE
 
@@ -63,9 +66,20 @@ See the systemd service configuration in the [deployment section below](#systemd
 ### Tailscale Integration
 
 ```bash
-# On the host running Tailmux:
+# Bind Tailmux to localhost, then publish via Tailscale:
+HOST=127.0.0.1 TAILMUX_TOKEN=your-token-here npm start
 tailscale serve tcp 3000 --name tailmux
 ```
+
+Connect with the token once to store it in your browser:
+
+```bash
+https://tailmux.<tailnet>.ts.net/?token=your-token-here
+```
+
+The token is saved in `localStorage` (key `tailmux_token`). Clear it in the browser if you need to rotate it.
+
+API requests include the token as an `Authorization: Bearer` header when set.
 
 Users on your tailnet can access via the MagicDNS name.
 
